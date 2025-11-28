@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>喝水提醒</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f0f8ff;
+            margin: 0;
+        }
+        .container {
+            max-width: 360px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        h1 {
+            color: #1e90ff;
+        }
+        .input-group {
+            margin: 20px 0;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input {
+            padding: 10px;
+            width: 100%;
+            box-sizing: border-box;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #1e90ff;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            margin: 10px 5px;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 120px;
+        }
+        button:hover {
+            background-color: #0066cc;
+        }
+        button#stopReminder {
+            background-color: #dc3545;
+        }
+        button#stopReminder:hover {
+            background-color: #bd2130;
+        }
+        #status {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 4px;
+            background-color: #e6f7ff;
+        }
+        .history-section {
+            margin-top: 30px;
+            text-align: left;
+        }
+        .history-section h2 {
+            color: #1e90ff;
+            border-bottom: 1px solid #1e90ff;
+            padding-bottom: 5px;
+        }
+        #historyList {
+            list-style: none;
+            padding: 0;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        #historyList li {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+            background-color: white;
+            margin-bottom: 5px;
+            border-radius: 4px;
+        }
+        .history-time {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        .history-message {
+            font-size: 14px;
+            color: #333;
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        .status-active {
+            background-color: #28a745;
+        }
+        .status-inactive {
+            background-color: #dc3545;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>💧 愿你是自己的太阳</h1>
+        
+        <div class="input-group">
+            <label for="interval">提醒间隔（分钟）：</label>
+            <input type="number" id="interval" min="1" max="120" value="30">
+        </div>
+        
+        <div>
+            <button id="setReminder">开始提醒</button>
+            <button id="stopReminder">暂停提醒</button>
+            <button id="testReminder">测试提醒</button>
+        </div>
+        
+        <div id="status">
+            <span class="status-indicator status-inactive"></span>
+            <span>当前状态: 未启动</span>
+        </div>
+        
+        <div class="history-section">
+            <h2>提醒历史</h2>
+            <ul id="historyList">
+                <li>暂无提醒历史</li>
+            </ul>
+        </div>
+    </div>
+
+    <script src="./renderer.js"></script>
+</body>
+</html>
