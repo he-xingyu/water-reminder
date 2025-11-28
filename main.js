@@ -7,6 +7,7 @@ let waterReminderTimer = null;
 let tray = null;
 let isReminding = false;
 let reminderHistory = []; // 存储提醒历史
+app.isQuiting = false;
 
 // 提示语数组
 const messages = [
@@ -30,21 +31,20 @@ const createWindow = () => {
   mainWindow.loadFile('index.html')
   
   // 监听窗口关闭事件，根据不同平台处理
-  mainWindow.on('close', (event) => {
+  mainWindow.on('close', function (event) {
     if (process.platform === 'darwin') {
-      // macOS 上隐藏窗口而不是退出应用
+      // macOS: 点击红叉只隐藏窗口
       if (!app.isQuiting) {
         event.preventDefault();
         mainWindow.hide();
       }
     } else {
-      // Windows/Linux 上的行为
+      // Windows/Linux: 点击关闭按钮隐藏窗口而不是退出
       if (!app.isQuiting) {
         event.preventDefault();
         mainWindow.hide();
       }
     }
-    return false;
   });
 }
 
