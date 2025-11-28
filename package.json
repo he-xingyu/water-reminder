@@ -13,7 +13,7 @@
     "build:linux": "electron-builder --linux"
   },
   "build": {
-    "appId": "com.yourcompany.water",
+    "appId": "com.hexingyu.water",
     "productName": "Water",
     "directories": {
       "output": "dist"
