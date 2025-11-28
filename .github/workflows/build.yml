@@ -17,8 +17,6 @@ jobs:
             platform: win
           - os: macos-latest  
             platform: mac
-          - os: ubuntu-latest
-            platform: linux
 
     runs-on: ${{ matrix.os }}
     name: Build for ${{ matrix.platform }}
@@ -34,8 +32,8 @@ jobs:
         cache: 'npm'
         
     - name: Install dependencies
-      run: npm ci  # 使用 npm ci 而不是 npm install
-      
+      run: npm ci
+    
     - name: Build application
       run: npm run build:${{ matrix.platform }}
         
@@ -63,7 +61,6 @@ jobs:
           artifacts/win-build/*.exe
           artifacts/mac-build/*.dmg
           artifacts/mac-build/*.zip
-          artifacts/linux-build/*.AppImage
         generate_release_notes: true
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
