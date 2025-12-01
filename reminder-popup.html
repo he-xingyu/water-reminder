@@ -1,0 +1,187 @@
+<!-- reminder-popup.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>喝水提醒</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+            user-select: none;
+        }
+        
+        .popup-container {
+            width: 300px;
+            margin: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            animation: slideIn 0.3s ease-out;
+            position: relative;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px 8px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .title {
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+        }
+        
+        .title-icon {
+            margin-right: 8px;
+            font-size: 18px;
+        }
+        
+        .close-btn {
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 20px;
+            cursor: pointer;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.2s ease;
+            padding: 0;
+        }
+        
+        .close-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+        
+        .content {
+            padding: 15px 20px;
+            color: white;
+        }
+        
+        .message {
+            font-size: 14px;
+            line-height: 1.5;
+            margin-bottom: 10px;
+            word-wrap: break-word;
+        }
+        
+        .time {
+            font-size: 12px;
+            opacity: 0.8;
+            display: flex;
+            align-items: center;
+        }
+        
+        .time-icon {
+            margin-right: 5px;
+        }
+        
+        .footer {
+            padding: 12px 20px 15px;
+            text-align: center;
+        }
+        
+        .action-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            width: 100%;
+        }
+        
+        .action-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="popup-container">
+        <div class="header">
+            <div class="title">
+                <span class="title-icon">💧</span>
+                <span>喝水提醒</span>
+            </div>
+            <button class="close-btn" id="closeBtn">×</button>
+        </div>
+        <div class="content">
+            <div class="message" id="message"></div>
+            <div class="time">
+                <span class="time-icon">⏰</span>
+                <span id="time"></span>
+            </div>
+        </div>
+        <div class="footer">
+            <button class="action-btn" id="dismissBtn">我知道了</button>
+        </div>
+    </div>
+
+    <script>
+        const closeBtn = document.getElementById('closeBtn');
+        const dismissBtn = document.getElementById('dismissBtn');
+        const messageEl = document.getElementById('message');
+        const timeEl = document.getElementById('time');
+        
+        // 获取通过URL传递的参数
+        const urlParams = new URLSearchParams(window.location.search);
+        const message = urlParams.get('message');
+        const time = urlParams.get('time');
+        
+        if (message) {
+            messageEl.textContent = message;
+        }
+        
+        if (time) {
+            timeEl.textContent = time;
+        }
+        
+        // 关闭弹窗的函数
+        const closePopup = () => {
+            try {
+                const { ipcRenderer } = require('electron');
+                ipcRenderer.send('close-reminder-popup');
+            } catch (e) {
+                // 如果无法获取ipcRenderer，则尝试通过window.opener关闭
+                window.close();
+            }
+        };
+        
+        closeBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            closePopup();
+        });
+        
+        dismissBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            closePopup();
+        });
+    </script>
+</body>
+</html>

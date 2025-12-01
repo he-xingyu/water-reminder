@@ -1,11 +1,14 @@
+// preload.js
 const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('electronAPI', {
     ping: () => ipcRenderer.invoke('ping'),
-    setWaterReminder: (intervalMinutes) => ipcRenderer.invoke('set-water-reminder', intervalMinutes),
+    setWaterReminder: (intervalMinutes, notificationMode) => ipcRenderer.invoke('set-water-reminder', intervalMinutes, notificationMode),
     stopWaterReminder: () => ipcRenderer.invoke('stop-water-reminder'),
-    testReminder: () => ipcRenderer.invoke('test-reminder'),
+    testReminder: (notificationMode) => ipcRenderer.invoke('test-reminder', notificationMode),
     getReminderStatus: () => ipcRenderer.invoke('get-reminder-status'),
     getReminderHistory: () => ipcRenderer.invoke('get-reminder-history'),
-    onReminderHistoryUpdated: (callback) => ipcRenderer.on('reminder-history-updated', callback)
+    getNotificationMode: () => ipcRenderer.invoke('get-notification-mode'),
+    onReminderHistoryUpdated: (callback) => ipcRenderer.on('reminder-history-updated', callback),
+    closeReminderPopup: () => ipcRenderer.send('close-reminder-popup')
 });

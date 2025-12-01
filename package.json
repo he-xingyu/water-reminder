@@ -1,7 +1,7 @@
 {
   "name": "water",
   "author": "he-xingyu",
-  "productName":"喝水提醒",
+  "productName":"太干了",
   "version": "1.0.0",
   "description": "A water reminder application",
   "main": "main.js",

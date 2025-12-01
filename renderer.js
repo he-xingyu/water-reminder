@@ -1,3 +1,4 @@
+// renderer.js
 // 获取DOM元素
 const intervalInput = document.getElementById('interval');
 const setReminderBtn = document.getElementById('setReminder');
@@ -23,11 +24,23 @@ document.addEventListener('DOMContentLoaded', async () => {
     } catch (error) {
         console.error('获取历史记录失败:', error);
     }
+    
+    // 获取保存的通知模式设置
+    try {
+        const savedMode = await window.electronAPI.getNotificationMode();
+        const modeElement = document.querySelector(`input[name="notificationMode"][value="${savedMode}"]`);
+        if (modeElement) {
+            modeElement.checked = true;
+        }
+    } catch (error) {
+        console.error('获取通知模式失败:', error);
+    }
 });
 
 // 设置提醒按钮事件
 setReminderBtn.addEventListener('click', async () => {
     const interval = parseInt(intervalInput.value);
+    const notificationMode = getSelectedNotificationMode();
     
     if (isNaN(interval) || interval <= 0) {
         showStatus('请输入有效的分钟数', 'error');
@@ -35,7 +48,7 @@ setReminderBtn.addEventListener('click', async () => {
     }
     
     try {
-        const result = await window.electronAPI.setWaterReminder(interval);
+        const result = await window.electronAPI.setWaterReminder(interval, notificationMode);
         showStatus(result, 'success');
         updateStatus({isActive: true});
     } catch (error) {
@@ -56,8 +69,10 @@ stopReminderBtn.addEventListener('click', async () => {
 
 // 测试提醒按钮事件
 testReminderBtn.addEventListener('click', async () => {
+    const notificationMode = getSelectedNotificationMode();
+    
     try {
-        const result = await window.electronAPI.testReminder();
+        const result = await window.electronAPI.testReminder(notificationMode);
         showStatus(result, 'info');
     } catch (error) {
         showStatus('测试失败: ' + error.message, 'error');
@@ -136,4 +151,10 @@ function updateHistoryDisplay(history) {
             <div class="history-message">${item.message}</div>
         </li>`
     ).join('');
+}
+
+// 获取选中的通知模式
+function getSelectedNotificationMode() {
+    const selectedElement = document.querySelector('input[name="notificationMode"]:checked');
+    return selectedElement ? selectedElement.value : 'custom';
 }

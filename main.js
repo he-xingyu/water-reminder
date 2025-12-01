@@ -1,4 +1,5 @@
-const { app, BrowserWindow, ipcMain, Tray, Menu, Notification } = require('electron')
+// main.js (部分更新)
+const { app, BrowserWindow, ipcMain, Tray, Menu, Notification, screen } = require('electron')
 const path = require('node:path')
 const notifier = require('node-notifier')
 app.setName('喝水提醒')
@@ -7,6 +8,8 @@ let waterReminderTimer = null;
 let tray = null;
 let isReminding = false;
 let reminderHistory = []; // 存储提醒历史
+let reminderPopupWindow = null; // 新增：提醒弹窗窗口
+let currentNotificationMode = 'custom'; // 默认使用自定义弹窗
 app.isQuiting = false;
 
 // 提示语数组
@@ -21,7 +24,7 @@ const messages = [
 const createWindow = () => {
   mainWindow = new BrowserWindow({
     width: 400,
-    height: 600,
+    height: 640,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       nodeIntegration: false,
@@ -67,6 +70,12 @@ const createTray = () => {
       }
     },
     {
+      label: '关闭所有提醒窗口',
+      click: () => {
+        closeAllReminderPopups();
+      }
+    },
+    {
       label: '退出',
       click: () => {
         app.isQuiting = true;
@@ -83,28 +92,69 @@ const createTray = () => {
   });
 };
 
-// 发送双重通知（SnoreToast + Electron Notification）
-const sendDualNotification = (message) => {
+// 创建提醒弹窗窗口
+const createReminderPopup = (message) => {
+  // 如果已经存在提醒窗口，先关闭它
+  if (reminderPopupWindow) {
+    reminderPopupWindow.destroy();
+  }
+  
+  // 获取主屏幕尺寸
+  const primaryDisplay = screen.getPrimaryDisplay();
+  const { width, height } = primaryDisplay.workAreaSize;
+  
+  // 创建弹窗窗口
+  reminderPopupWindow = new BrowserWindow({
+    width: 340,
+    height: 210,  // 增加高度以容纳"我知道了"按钮
+    x: width - 360, // 距离右边20px
+    y: 20, // 距离顶部20px
+    frame: false,
+    alwaysOnTop: true,
+    resizable: false,
+    movable: false,
+    focusable: false,
+    transparent: true,
+    hasShadow: true,
+    webPreferences: {
+      contextIsolation: false,  // 允许在渲染进程中使用Node.js API
+      nodeIntegration: true     // 启用Node.js集成
+    }
+  });
+  
+  // 加载弹窗页面，并传递消息和时间参数
+  const currentTime = new Date().toLocaleTimeString('zh-CN', { 
+    hour: '2-digit', 
+    minute: '2-digit',
+    second: '2-digit'
+  });
+  reminderPopupWindow.loadFile('reminder-popup.html', {
+    query: {
+      message: message,
+      time: currentTime
+    }
+  });
+  
+  // 禁止弹窗获得焦点
+  reminderPopupWindow.on('focus', () => {
+    if (mainWindow && mainWindow.isVisible()) {
+      mainWindow.focus();
+    }
+  });
+};
+
+// 关闭所有提醒弹窗
+const closeAllReminderPopups = () => {
+  if (reminderPopupWindow) {
+    reminderPopupWindow.destroy();
+    reminderPopupWindow = null;
+  }
+};
+
+// 发送系统通知
+const sendSystemNotification = (message) => {
   const iconPath = path.join(__dirname, 'build', 'icon.png');
   
-  // 使用 SnoreToast 发送通知
-  // notifier.notify(
-  //   {
-  //     title: '该喝水啦',
-  //     message: message,
-  //     icon: iconPath,
-  //     sound: true,
-  //     wait: true,
-  //     timeout: false
-  //   },
-  //   (err, response) => {
-  //     if (err) {
-  //       console.error('SnoreToast 通知发送失败:', err);
-  //     }
-  //   }
-  // );
-  
-  // 同时使用 Electron 原生 Notification
   if (Notification.isSupported()) {
     const electronNotification = new Notification({
       title: '该喝水啦',
@@ -125,15 +175,24 @@ const sendDualNotification = (message) => {
   } else {
     console.log('当前系统不支持 Electron 原生通知');
   }
-  
-  // 如果托盘支持气泡提示，也显示
-  // if (tray && tray.displayBalloon) {
-  //   tray.displayBalloon({
-  //     icon: iconPath,
-  //     title: '该喝水啦',
-  //     content: message
-  //   });
-  // }
+};
+
+// 发送自定义弹窗通知
+const sendCustomPopup = (message) => {
+  createReminderPopup(message);
+};
+
+// 根据模式发送通知
+const sendNotificationByMode = (message, mode) => {
+  switch(mode) {
+    case 'system':
+      sendSystemNotification(message);
+      break;
+    case 'custom':
+    default:
+      sendCustomPopup(message);
+      break;
+  }
 };
 
 // 添加提醒历史记录
@@ -159,7 +218,10 @@ const addReminderToHistory = (message) => {
 };
 
 // 设置喝水提醒定时器
-const setWaterReminder = (intervalMinutes) => {
+const setWaterReminder = (intervalMinutes, notificationMode) => {
+  // 保存当前通知模式
+  currentNotificationMode = notificationMode || 'custom';
+  
   // 清除之前的定时器
   if (waterReminderTimer) {
     clearInterval(waterReminderTimer);
@@ -171,15 +233,15 @@ const setWaterReminder = (intervalMinutes) => {
     if (mainWindow) {
       // 随机选择一条提示语
       const randomMessage = messages[Math.floor(Math.random() * messages.length)];
-      // 发送双重通知
-      sendDualNotification(randomMessage);
+      // 根据模式发送通知
+      sendNotificationByMode(randomMessage, currentNotificationMode);
       // 添加到历史记录
       addReminderToHistory(randomMessage);
     }
   }, intervalMs);
   
   isReminding = true;
-  return `已设置每${intervalMinutes}分钟提醒一次喝水`;
+  return `已设置每${intervalMinutes}分钟提醒一次喝水（${notificationMode === 'system' ? '系统弹窗' : '自定义弹窗'}）`;
 };
 
 // 停止提醒
@@ -189,17 +251,20 @@ const stopWaterReminder = () => {
     waterReminderTimer = null;
   }
   isReminding = false;
+  // 停止提醒时也关闭所有弹窗
+  closeAllReminderPopups();
   return '已停止喝水提醒';
 };
 
 // 测试提醒功能
-const testReminder = () => {
+const testReminder = (notificationMode) => {
   if (mainWindow) {
     // 发送测试通知
     const testMessage = "🧪 这是一个测试提醒！";
-    sendDualNotification(testMessage);
+    const mode = notificationMode || currentNotificationMode || 'custom';
+    sendNotificationByMode(testMessage, mode);
     addReminderToHistory(testMessage);
-    return '测试提醒已发送';
+    return `测试提醒已发送（${mode === 'system' ? '系统弹窗' : '自定义弹窗'}）`;
   }
   return '无法发送测试提醒';
 };
@@ -217,22 +282,35 @@ const getReminderHistory = () => {
   return reminderHistory;
 };
 
+// 获取通知模式
+const getNotificationMode = () => {
+  return currentNotificationMode;
+};
+
 app.whenReady().then(() => {
   ipcMain.handle('ping', () => 'pong')
-  ipcMain.handle('set-water-reminder', (event, intervalMinutes) => {
-    return setWaterReminder(intervalMinutes);
+  ipcMain.handle('set-water-reminder', (event, intervalMinutes, notificationMode) => {
+    return setWaterReminder(intervalMinutes, notificationMode);
   });
   ipcMain.handle('stop-water-reminder', () => {
     return stopWaterReminder();
   });
-  ipcMain.handle('test-reminder', () => {
-    return testReminder();
+  ipcMain.handle('test-reminder', (event, notificationMode) => {
+    return testReminder(notificationMode);
   });
   ipcMain.handle('get-reminder-status', () => {
     return getReminderStatus();
   });
   ipcMain.handle('get-reminder-history', () => {
     return getReminderHistory();
+  });
+  ipcMain.handle('get-notification-mode', () => {
+    return getNotificationMode();
+  });
+  
+  // 监听关闭提醒弹窗的请求
+  ipcMain.on('close-reminder-popup', () => {
+    closeAllReminderPopups();
   });
   
   createWindow()
