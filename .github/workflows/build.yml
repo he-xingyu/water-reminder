@@ -34,8 +34,8 @@ jobs:
     
     - name: Build application
       run: |
-        # 使用 clean-build:mac 替代 build:mac 来清理开发依赖
-        npm run clean-build:mac
+        # 执行 build:mac 脚本来构建应用
+        npm run build:mac
         
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4

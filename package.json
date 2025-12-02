@@ -11,7 +11,6 @@
     "build:win": "electron-builder --win",
     "build:win-portable": "electron-builder --win portable",
     "build:mac": "electron-builder --mac dmg --config.mac.artifactName='${productName}-${version}-${arch}.${ext}'",
-    "clean-build:mac": "npm prune --production && electron-builder --mac",
     "build:linux": "electron-builder --linux"
   },
   "build": {
@@ -29,7 +28,7 @@
       "index.html",
       "reminder-popup.html",
       "package.json",
-      "build/**/*",
+      "!build/**/*",
       "!node_modules/**/*"
     ],
     "extraResources": [
