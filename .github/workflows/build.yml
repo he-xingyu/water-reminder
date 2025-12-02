@@ -54,13 +54,18 @@ jobs:
       with:
         path: artifacts
 
+    - name: Clean up unnecessary macOS files
+      run: |
+        find artifacts/mac-build -type f ! -name '*.dmg' -delete
+        find artifacts/mac-build -type d -empty -delete
+      shell: bash
+
     - name: Create Release
       uses: softprops/action-gh-release@v1
       with:
         files: |
           artifacts/win-build/*.exe
           artifacts/mac-build/*.dmg
-          # artifacts/mac-build/*.zip
         generate_release_notes: true
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
