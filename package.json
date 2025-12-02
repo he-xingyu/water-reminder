@@ -10,7 +10,7 @@
     "build": "electron-builder",
     "build:win": "electron-builder --win",
     "build:win-portable": "electron-builder --win portable",
-    "build:mac": "electron-builder --mac --config.artifactName='${productName}-${version}-${arch}.${ext}'",
+    "build:mac": "electron-builder --mac dmg --config.mac.artifactName='${productName}-${version}-${arch}.${ext}'",
     "clean-build:mac": "npm prune --production && electron-builder --mac",
     "build:linux": "electron-builder --linux"
   },
