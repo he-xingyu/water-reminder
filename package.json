@@ -1,7 +1,7 @@
 {
   "name": "water",
   "author": "he-xingyu",
-  "productName":"太干了",
+  "productName": "太干了",
   "version": "1.0.0",
   "description": "A water reminder application",
   "main": "main.js",
@@ -10,7 +10,8 @@
     "build": "electron-builder",
     "build:win": "electron-builder --win",
     "build:win-portable": "electron-builder --win portable",
-    "build:mac": "electron-builder --mac",
+    "build:mac": "electron-builder --mac --config.artifactName='${productName}-${version}-${arch}.${ext}'",
+    "clean-build:mac": "npm prune --production && electron-builder --mac",
     "build:linux": "electron-builder --linux"
   },
   "build": {
@@ -19,61 +20,41 @@
     "directories": {
       "output": "dist"
     },
+    "asar": true,
+    "asarUnpack": [
+      "node_modules/node-notifier/vendor/**/*"
+    ],
     "publish": false,
     "files": [
       "main.js",
       "renderer.js",
+      "preload.js",
       "index.html",
+      "reminder-popup.html",
       "package.json",
-      "**/*",
-      "!**/node_modules/*/{CHANGELOG.md,README.md,README,readme.md,readme}",
-      "!**/node_modules/*/{test,__tests__,tests,powered-test,example,examples}",
-      "!**/node_modules/*.d.ts",
-      "!**/node_modules/.bin",
-      "!**/*.{iml,o,hprof,orig,pyc,pyo,rbc,swp,csproj,sln,xproj}",
-      "!.editorconfig",
-      "!**/._*",
-      "!**/{.DS_Store,.git,.hg,.svn,CVS,RCS,SCCS,.gitignore,.gitattributes}",
-      "!**/{__pycache__,thumbs.db,.flowconfig,.idea,.vs,.nyc_output}",
-      "!**/{appveyor.yml,.travis.yml,circle.yml}",
-      "!**/{npm-debug.log,yarn.lock,.yarn-integrity,.yarn-metadata.json}"
+      "build/**/*",
+      "!node_modules/**/*"
     ],
+    "extraResources": [
+      {
+        "from": "build/",
+        "to": "resources/build/",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ],
+    "compression": "maximum",
     "mac": {
       "category": "public.app-category.utilities",
       "target": [
-        "dmg",
-        "zip"
+        "dmg"
       ],
-      "icon": "build/icon.icns"
-    },
-    "win": {
-      "target": [
-        {
-          "target": "nsis",
-          "arch": [
-            "x64"
-          ]
-        },
-        {
-          "target": "portable",
-          "arch": [
-            "x64"
-          ]
-        }
-      ],
-      "icon": "build/water.ico"
-    },
-    "linux": {
-      "target": [
-        "AppImage",
-        "deb",
-        "rpm"
-      ],
-      "icon": "build/icons"
-    },
-    "nsis": {
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": true
+      "icon": "build/icon.icns",
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "entitlements": "build/entitlements.mac.plist",
+      "entitlementsInherit": "build/entitlements.mac.plist"
     }
   },
   "devDependencies": {

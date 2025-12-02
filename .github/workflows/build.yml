@@ -35,7 +35,9 @@ jobs:
       run: npm ci
     
     - name: Build application
-      run: npm run build:${{ matrix.platform }}
+      run: |
+        npm prune --production
+        npm run build:${{ matrix.platform }}
         
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
