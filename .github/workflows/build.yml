@@ -13,9 +13,6 @@ jobs:
     strategy:
       matrix:
         include:
-          # 注释掉 Windows 打包配置
-          # - os: windows-latest
-          #   platform: win
           - os: macos-latest  
             platform: mac
 
@@ -37,7 +34,8 @@ jobs:
     
     - name: Build application
       run: |
-        npm run build:${{ matrix.platform }}
+        # 使用 clean-build:mac 替代 build:mac 来清理开发依赖
+        npm run clean-build:mac
         
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
@@ -66,8 +64,6 @@ jobs:
       uses: softprops/action-gh-release@v1
       with:
         files: |
-          # 注释掉 Windows 打包文件
-          # artifacts/win-build/*.exe
           artifacts/mac-build/*.dmg
         generate_release_notes: true
       env:
