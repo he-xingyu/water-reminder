@@ -36,7 +36,6 @@ jobs:
     
     - name: Build application
       run: |
-        npm prune --production
         npm run build:${{ matrix.platform }}
         
     - name: Upload build artifacts
