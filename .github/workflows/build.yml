@@ -60,7 +60,7 @@ jobs:
         files: |
           artifacts/win-build/*.exe
           artifacts/mac-build/*.dmg
-          artifacts/mac-build/*.zip
+          # artifacts/mac-build/*.zip
         generate_release_notes: true
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
