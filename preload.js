@@ -10,5 +10,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
     getReminderHistory: () => ipcRenderer.invoke('get-reminder-history'),
     getNotificationMode: () => ipcRenderer.invoke('get-notification-mode'),
     onReminderHistoryUpdated: (callback) => ipcRenderer.on('reminder-history-updated', callback),
-    closeReminderPopup: () => ipcRenderer.send('close-reminder-popup')
+    closeReminderPopup: () => ipcRenderer.send('close-reminder-popup'),
+    getCurrentInterval: () => ipcRenderer.invoke('get-current-interval')
 });

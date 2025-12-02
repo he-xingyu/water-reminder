@@ -1,337 +1,420 @@
 <!-- index.html -->
 <!DOCTYPE html>
 <html>
-<head>
-    <meta charset="UTF-8">
+  <head>
+    <meta charset="UTF-8" />
     <title>喝水提醒</title>
     <style>
-        * {
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            padding: 0;
-            background: linear-gradient(135deg, #e0f7fa, #b2ebf2);
-            margin: 0;
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-        
-        .container {
-            max-width: 400px;
-            width: 100%;
-            margin: 20px;
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 16px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-            padding: 30px;
-            backdrop-filter: blur(10px);
-        }
-        
-        h1 {
-            color: #0097a7;
-            margin-top: 0;
-            text-align: center;
-            font-weight: 600;
-            font-size: 24px;
-            margin-bottom: 25px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-        }
-        
-        h1::before {
-            content: "☀️";
-        }
-        
-        .input-group {
-            margin: 25px 0;
-        }
-        
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 500;
-            color: #333;
-            font-size: 15px;
-        }
-        
-        input {
-            padding: 14px;
-            width: 100%;
-            box-sizing: border-box;
-            border: 2px solid #e0e0e0;
-            border-radius: 10px;
-            font-size: 16px;
-            transition: border-color 0.3s;
-        }
-        
-        input:focus {
-            outline: none;
-            border-color: #0097a7;
-            box-shadow: 0 0 0 3px rgba(0, 151, 167, 0.2);
-        }
-        
-        button {
-            background: white;
-            color: #424242;
-            border: 1px solid #9e9e9e;
-            padding: 14px 20px;
-            margin: 10px 5px;
-            border-radius: 10px;
-            cursor: pointer;
-            width: 120px;
-            font-weight: 500;
-            font-size: 15px;
-            transition: all 0.3s ease;
-        }
-        
-        button:hover {
-            background: #f5f5f5;
-            transform: translateY(-2px);
-        }
-        
-        button:active {
-            transform: translateY(0);
-        }
-        
-        button#stopReminder {
-            color: #d32f2f;
-            border-color: #d32f2f;
-            background: white;
-        }
-        
-        button#stopReminder:hover {
-            background: #ffebee;
-        }
-        
-        #status {
-            margin: 25px 0;
-            padding: 16px;
-            border-radius: 10px;
-            background: #e0f7fa;
-            font-weight: 500;
-            display: flex;
-            align-items: center;
-            box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.05);
-        }
-        
-        .history-section {
-            margin-top: 30px;
-            text-align: left;
-        }
-        
-        .history-section h2 {
-            color: #0097a7;
-            border-bottom: 2px solid #0097a7;
-            padding-bottom: 10px;
-            margin-top: 0;
-            font-weight: 600;
-            font-size: 20px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .history-section h2::before {
-            content: "🕒";
-        }
-        
-        #historyList {
-            list-style: none;
-            padding: 0;
-            max-height: 250px;
-            overflow-y: auto;
-            margin-top: 15px;
-            border-radius: 10px;
-        }
-        
-        #historyList::-webkit-scrollbar {
-            width: 6px;
-        }
-        
-        #historyList::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 10px;
-        }
-        
-        #historyList::-webkit-scrollbar-thumb {
-            background: #0097a7;
-            border-radius: 10px;
-        }
-        
-        #historyList li {
-            padding: 14px;
-            border-bottom: 1px solid #eee;
-            background: white;
-            margin-bottom: 10px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-            transition: transform 0.2s;
-        }
-        
-        #historyList li:last-child {
-            border-bottom: none;
-            margin-bottom: 0;
-        }
-        
-        #historyList li:hover {
-            transform: translateX(5px);
-        }
-        
-        .history-time {
-            font-size: 12px;
-            color: #0097a7;
-            font-weight: 600;
-            margin-bottom: 5px;
-        }
-        
-        .history-message {
-            font-size: 14px;
-            color: #333;
-            line-height: 1.4;
-        }
-        
-        .status-indicator {
-            display: inline-block;
-            width: 14px;
-            height: 14px;
-            border-radius: 50%;
-            margin-right: 12px;
-            flex-shrink: 0;
-        }
-        
-        .status-active {
-            background-color: #0097a7;
-            box-shadow: 0 0 8px rgba(0, 151, 167, 0.5);
-        }
-        
-        .status-inactive {
-            background-color: #d32f2f;
-        }
-        
-        /* 通知模式选择样式 */
-        .notification-mode {
-            text-align: left;
-            margin: 25px 0;
-            padding: 20px;
-            background: #e0f7fa;
-            border-radius: 12px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
-        }
-        
-        .notification-mode label:first-child {
-            font-weight: 600;
-            color: #333;
-            font-size: 16px;
-            margin-bottom: 15px;
-            display: block;
-        }
-        
-        .mode-options {
-            display: flex;
-            gap: 25px;
-            margin-top: 10px;
-        }
-        
-        .mode-option {
-            margin: 0;
-            display: flex;
-            align-items: center;
-        }
-        
-        .mode-option input {
-            width: auto;
-            margin-right: 10px;
-            accent-color: #0097a7;
-        }
-        
-        .mode-option label {
-            font-weight: 500;
-            cursor: pointer;
-            margin-bottom: 0;
-            color: #555;
-        }
-        
-        .buttons-container {
-            display: flex;
-            justify-content: center;
-            /* flex-wrap: wrap; */
-            gap: 10px;
-            margin: 20px 0;
-        }
-        
-        @media (max-width: 480px) {
-            .container {
-                padding: 20px;
-                margin: 10px;
-            }
-            
-            .mode-options {
-                flex-direction: column;
-                gap: 15px;
-            }
-            
-            button {
-                width: 100%;
-                margin: 5px 0;
-            }
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>愿你是自己的太阳</h1>
-        
-        <!-- 将状态显示移到上方 -->
-        <div id="status">
-            <span class="status-indicator status-inactive"></span>
-            <span>当前状态: 未启动</span>
-        </div>
-        
-        <div class="input-group">
-            <label for="interval">提醒间隔（分钟）：</label>
-            <input type="number" id="interval" min="1" max="120" value="30">
-        </div>
-        
-        <!-- 通知模式选择 -->
-        <div class="notification-mode">
-            <label>通知模式：</label>
-            <div class="mode-options">
-                <div class="mode-option">
-                    <input type="radio" id="customPopup" name="notificationMode" value="custom" checked>
-                    <label for="customPopup">自定义弹窗</label>
-                </div>
-                <div class="mode-option">
-                    <input type="radio" id="systemNotification" name="notificationMode" value="system">
-                    <label for="systemNotification">系统弹窗</label>
-                </div>
-            </div>
-        </div>
-        
-        <!-- 按钮容器保持并排显示 -->
-        <div class="buttons-container">
-            <button id="setReminder">开始提醒</button>
-            <button id="stopReminder">暂停提醒</button>
-            <!-- <button id="testReminder">测试提醒</button> -->
-        </div>
+      * {
+        box-sizing: border-box;
+      }
 
-        <div style="text-align: center; margin-top: 10px;">
-            <span id="testReminder" style="color: gray; cursor: pointer;">测试提醒</span>
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        padding: 0;
+        background: linear-gradient(135deg, #e0f7fa, #b2ebf2);
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        padding-top: 15px;
+      }
+
+      .container {
+        max-width: 400px;
+        width: 90%;
+        margin: 20px;
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 16px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        padding: 20px;
+        backdrop-filter: blur(10px);
+      }
+
+      h1 {
+        color: #0097a7;
+        margin-top: 0;
+        text-align: center;
+        font-weight: 600;
+        font-size: 24px;
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+      }
+
+      h1::before {
+        content: "☀️";
+      }
+
+      .input-group {
+        margin: 15px 0;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 500;
+        color: #333;
+        font-size: 15px;
+      }
+
+      input {
+        padding: 14px;
+        width: 100%;
+        box-sizing: border-box;
+        border: 2px solid #e0e0e0;
+        border-radius: 10px;
+        font-size: 16px;
+        transition: border-color 0.3s;
+      }
+
+      input:focus {
+        outline: none;
+        border-color: #0097a7;
+        box-shadow: 0 0 0 3px rgba(0, 151, 167, 0.2);
+      }
+
+      button {
+        background: white;
+        color: #424242;
+        border: 1px solid #9e9e9e;
+        padding: 12px 16px;
+        margin: 8px 5px;
+        border-radius: 10px;
+        cursor: pointer;
+        width: 110px;
+        font-weight: 500;
+        font-size: 15px;
+        transition: all 0.3s ease;
+      }
+
+      button:hover {
+        background: #f5f5f5;
+        transform: translateY(-2px);
+      }
+
+      button:active {
+        transform: translateY(0);
+      }
+
+      button#stopReminder {
+        color: #d32f2f;
+        border-color: #d32f2f;
+        background: white;
+      }
+
+      button#stopReminder:hover {
+        background: #ffebee;
+      }
+
+      #status {
+        margin: 15px 0;
+        padding: 12px;
+        border-radius: 10px;
+        background: #e0f7fa;
+        font-weight: 500;
+        box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.05);
+      }
+
+      .status-line {
+        display: flex;
+        align-items: center;
+        margin-bottom: 8px;
+      }
+
+      .status-line:last-child {
+        margin-bottom: 0;
+      }
+
+      .history-section {
+        margin-top: 20px;
+        text-align: left;
+      }
+
+      .history-section h2 {
+        color: #0097a7;
+        border-bottom: 2px solid #0097a7;
+        padding-bottom: 10px;
+        margin-top: 0;
+        font-weight: 600;
+        font-size: 20px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .history-section h2::before {
+        content: "🕒";
+      }
+
+      #historyList {
+        list-style: none;
+        padding: 0;
+        max-height: 250px;
+        overflow-y: auto;
+        margin-top: 10px;
+        border-radius: 10px;
+      }
+
+      #historyList::-webkit-scrollbar {
+        width: 6px;
+      }
+
+      #historyList::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 10px;
+      }
+
+      #historyList::-webkit-scrollbar-thumb {
+        background: #0097a7;
+        border-radius: 10px;
+      }
+
+      #historyList li {
+        padding: 12px;
+        border-bottom: 1px solid #eee;
+        background: white;
+        margin-bottom: 8px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        transition: transform 0.2s;
+      }
+
+      #historyList li:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+      }
+
+      #historyList li:hover {
+        transform: translateX(5px);
+      }
+
+      .history-time {
+        font-size: 12px;
+        color: #0097a7;
+        font-weight: 600;
+        margin-bottom: 5px;
+      }
+
+      .history-message {
+        font-size: 14px;
+        color: #333;
+        line-height: 1.4;
+      }
+
+      .status-indicator {
+        display: inline-block;
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        margin-right: 12px;
+        flex-shrink: 0;
+      }
+
+      .status-active {
+        background-color: #0097a7;
+        box-shadow: 0 0 8px rgba(0, 151, 167, 0.5);
+      }
+
+      .status-inactive {
+        background-color: #d32f2f;
+      }
+
+      .notification-mode {
+        text-align: left;
+        margin: 12px 0;
+        padding: 12px;
+        background: rgba(224, 247, 250, 0.5);
+        border-radius: 12px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+      }
+
+      .notification-mode label:first-child {
+        font-weight: 600;
+        color: #333;
+        font-size: 16px;
+        margin-bottom: 6px;
+        display: block;
+      }
+
+      .mode-options {
+        display: flex;
+        gap: 10px;
+        margin-top: 3px;
+      }
+
+      .mode-option {
+        margin: 0;
+        display: flex;
+        align-items: center;
+      }
+
+      .mode-option input {
+        width: auto;
+        margin-right: 8px;
+        accent-color: #0097a7;
+      }
+
+      .mode-option label {
+        font-weight: 500;
+        cursor: pointer;
+        margin-bottom: 0;
+        color: #555;
+      }
+
+      .buttons-container {
+        display: flex;
+        justify-content: center;
+        gap: 12px;
+        margin: 20px 0;
+      }
+
+      @media (max-width: 480px) {
+        .container {
+          padding: 20px;
+          margin: 12px;
+        }
+
+        .mode-options {
+          flex-direction: column;
+          gap: 8px;
+        }
+
+        button {
+          width: 100%;
+          margin: 4px 0;
+        }
+      }
+
+      .status-content {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+      }
+
+      .status-main-line {
+        display: flex;
+        align-items: center;
+        margin-bottom: 8px;
+      }
+
+      .status-icon {
+        margin-right: 12px;
+        width: 14px;
+        text-align: center;
+      }
+
+      .status-text {
+        flex-grow: 1;
+      }
+
+      .next-reminder-line {
+        display: flex;
+        align-items: center;
+        margin-top: 8px;
+        padding-top: 8px;
+        border-top: 1px solid rgba(0, 0, 0, 0.1);
+        color: #00788a;
+        font-weight: 500;
+      }
+
+      .status-message {
+        margin: 8px 0 0 0;
+        padding: 8px;
+        border-radius: 6px;
+        font-size: 14px;
+        line-height: 1.4;
+      }
+
+      .status-message.success {
+        background-color: #d4edda;
+        color: #155724;
+      }
+
+      .status-message.error {
+        background-color: #f8d7da;
+        color: #721c24;
+      }
+
+      .status-message.info {
+        background-color: #d1ecf1;
+        color: #0c5460;
+      }
+
+      #status .status-indicator {
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        flex-shrink: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>愿你是自己的太阳</h1>
+
+      <div id="status">
+        <div class="status-content">
+          <div class="status-line">
+            <span class="status-indicator status-inactive"></span>
+            <span class="status-text" id="statusText">当前状态: 未启动</span>
+          </div>
+          <div
+            class="next-reminder-line"
+            id="nextReminder"
+            style="display: none"
+          >
+            <span class="status-icon">⏱</span>
+            <span id="nextReminderText"></span>
+          </div>
         </div>
-        
-        <!-- <div class="history-section">
-            <h2>提醒历史</h2>
-            <ul id="historyList">
-                <li>暂无提醒历史</li>
-            </ul>
-        </div> -->
+      </div>
+
+      <div class="input-group">
+        <label for="interval">提醒间隔（分钟）：</label>
+        <input type="number" id="interval" min="1" max="120" value="30" />
+      </div>
+
+      <div class="notification-mode">
+        <label>通知模式：</label>
+        <div class="mode-options">
+          <div class="mode-option">
+            <input
+              type="radio"
+              id="customPopup"
+              name="notificationMode"
+              value="custom"
+              checked
+            />
+            <label for="customPopup">自定义弹窗</label>
+          </div>
+          <div class="mode-option">
+            <input
+              type="radio"
+              id="systemNotification"
+              name="notificationMode"
+              value="system"
+            />
+            <label for="systemNotification">系统弹窗</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="buttons-container">
+        <button id="setReminder">开始提醒</button>
+        <button id="stopReminder">暂停提醒</button>
+      </div>
+
+      <div style="text-align: center; margin-top: 5px">
+        <span id="testReminder" style="color: gray; cursor: pointer"
+          >测试提醒</span
+        >
+      </div>
     </div>
 
     <script src="./renderer.js"></script>
-</body>
+  </body>
 </html>

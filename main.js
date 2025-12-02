@@ -10,6 +10,7 @@ let isReminding = false;
 let reminderHistory = []; // 存储提醒历史
 let reminderPopupWindow = null; // 新增：提醒弹窗窗口
 let currentNotificationMode = 'custom'; // 默认使用自定义弹窗
+let currentReminderInterval = 0;
 app.isQuiting = false;
 
 // 提示语数组
@@ -219,6 +220,8 @@ const addReminderToHistory = (message) => {
 
 // 设置喝水提醒定时器
 const setWaterReminder = (intervalMinutes, notificationMode) => {
+   // 保存当前提醒间隔
+   currentReminderInterval = intervalMinutes;
   // 保存当前通知模式
   currentNotificationMode = notificationMode || 'custom';
   
@@ -243,7 +246,10 @@ const setWaterReminder = (intervalMinutes, notificationMode) => {
   isReminding = true;
   return `已设置每${intervalMinutes}分钟提醒一次喝水（${notificationMode === 'system' ? '系统弹窗' : '自定义弹窗'}）`;
 };
-
+// 添加一个新的 IPC 处理程序来获取当前提醒间隔
+const getCurrentReminderInterval = () => {
+  return currentReminderInterval;
+};
 // 停止提醒
 const stopWaterReminder = () => {
   if (waterReminderTimer) {
@@ -306,6 +312,9 @@ app.whenReady().then(() => {
   });
   ipcMain.handle('get-notification-mode', () => {
     return getNotificationMode();
+  });
+  ipcMain.handle('get-current-interval', () => {
+    return getCurrentReminderInterval();
   });
   
   // 监听关闭提醒弹窗的请求
