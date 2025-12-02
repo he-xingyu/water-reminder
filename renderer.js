@@ -5,13 +5,11 @@ const setReminderBtn = document.getElementById("setReminder");
 const stopReminderBtn = document.getElementById("stopReminder");
 const testReminderBtn = document.getElementById("testReminder");
 const statusDiv = document.getElementById("status");
-const historyList = document.getElementById("historyList");
 let nextReminderInterval = null;
 let nextReminderTime = null;
 
 // 页面加载完成后获取当前状态和历史记录
 document.addEventListener("DOMContentLoaded", async () => {
-  // 获取初始状态
   try {
     const status = await window.electronAPI.getReminderStatus();
     updateStatus(status);
@@ -19,15 +17,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     console.error("获取状态失败:", error);
   }
 
-  // 获取历史记录
-  try {
-    const history = await window.electronAPI.getReminderHistory();
-    updateHistoryDisplay(history);
-  } catch (error) {
-    console.error("获取历史记录失败:", error);
-  }
-
-  // 获取保存的通知模式设置
   try {
     const savedMode = await window.electronAPI.getNotificationMode();
     const modeElement = document.querySelector(
@@ -41,10 +30,37 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 });
 
+// 监听提醒触发事件
+window.electronAPI.onReminderTriggered((event, intervalMs) => {
+  nextReminderTime = Date.now() + intervalMs;
+  
+  if (nextReminderInterval) {
+    clearInterval(nextReminderInterval);
+  }
+  nextReminderInterval = setInterval(updateNextReminderDisplay, 1000);
+  
+  updateNextReminderDisplay();
+});
+
 // 设置提醒按钮事件
 setReminderBtn.addEventListener("click", async () => {
-  const interval = parseInt(intervalInput.value);
+  const inputValue = intervalInput.value.trim();
   const notificationMode = getSelectedNotificationMode();
+
+  if (inputValue.startsWith("text:")) {
+    const customText = inputValue.substring(5);
+    if (customText) {
+      try {
+        const result = await window.electronAPI.setCustomMessage(customText);
+        showStatus(result, "success");
+      } catch (error) {
+        showStatus("设置自定义文本失败: " + error.message, "error");
+      }
+      return;
+    }
+  }
+
+  const interval = parseInt(inputValue);
 
   if (isNaN(interval) || interval <= 0) {
     showStatus("请输入有效的分钟数", "error");
@@ -58,9 +74,13 @@ setReminderBtn.addEventListener("click", async () => {
     );
     showStatus(result, "success");
 
-    // 设置下次提醒时间
     nextReminderTime = Date.now() + interval * 60000;
     updateStatus({ isActive: true });
+    
+    if (nextReminderInterval) {
+      clearInterval(nextReminderInterval);
+    }
+    nextReminderInterval = setInterval(updateNextReminderDisplay, 1000);
   } catch (error) {
     showStatus("设置失败: " + error.message, "error");
   }
@@ -71,7 +91,7 @@ stopReminderBtn.addEventListener("click", async () => {
   try {
     const result = await window.electronAPI.stopWaterReminder();
     showStatus(result, "info");
-    nextReminderTime = null; // 清除下次提醒时间
+    nextReminderTime = null;
     updateStatus({ isActive: false });
   } catch (error) {
     showStatus("停止失败: " + error.message, "error");
@@ -90,30 +110,21 @@ testReminderBtn.addEventListener("click", async () => {
   }
 });
 
-// 监听历史记录更新
-window.electronAPI.onReminderHistoryUpdated((event, history) => {
-  updateHistoryDisplay(history);
-});
-
 // 显示状态信息
 function showStatus(message, type) {
-  const statusContent = document.querySelector('.status-content');
-  
-  // 移除之前的消息元素（如果有）
-  const existingMessage = statusContent.querySelector('.status-message');
+  const statusContent = document.querySelector(".status-content");
+
+  const existingMessage = statusContent.querySelector(".status-message");
   if (existingMessage) {
     existingMessage.remove();
   }
-  
-  // 创建新的消息元素
-  const messageElement = document.createElement('div');
+
+  const messageElement = document.createElement("div");
   messageElement.className = `status-message ${type}`;
   messageElement.textContent = message;
-  
-  // 将消息添加到状态内容区域的末尾
+
   statusContent.appendChild(messageElement);
-  
-  // 3秒后自动清除消息
+
   setTimeout(() => {
     if (messageElement.parentNode) {
       messageElement.remove();
@@ -131,23 +142,20 @@ function updateStatus(status) {
     indicator.className = "status-indicator status-active";
     statusText.textContent = "当前状态: 运行中";
 
-    // 如果有设置提醒时间，显示倒计时
     if (nextReminderTime) {
-      nextReminderElement.style.display = "block";
+      nextReminderElement.style.display = "flex";
       updateNextReminderDisplay();
 
-      // 启动倒计时更新定时器
       if (nextReminderInterval) {
         clearInterval(nextReminderInterval);
       }
-      nextReminderInterval = setInterval(updateNextReminderDisplay, 60000); // 每分钟更新一次
+      nextReminderInterval = setInterval(updateNextReminderDisplay, 1000);
     }
   } else {
     indicator.className = "status-indicator status-inactive";
     statusText.textContent = "当前状态: 已暂停";
     nextReminderElement.style.display = "none";
 
-    // 清除倒计时
     if (nextReminderInterval) {
       clearInterval(nextReminderInterval);
       nextReminderInterval = null;
@@ -155,43 +163,37 @@ function updateStatus(status) {
     nextReminderTime = null;
   }
 }
-function updateNextReminderDisplay() {
-    const nextReminderElement = document.getElementById("nextReminder");
-    const nextReminderText = document.getElementById("nextReminderText");
-    
-    if (!nextReminderTime) {
-      nextReminderElement.style.display = "none";
-      return;
-    }
-  
-    const now = Date.now();
-    const minutesLeft = Math.ceil((nextReminderTime - now) / 60000);
-  
-    if (minutesLeft > 0) {
-      nextReminderText.textContent = `距离下次提醒：${minutesLeft}分钟`;
-      nextReminderElement.style.display = "flex";
-    } else {
-      nextReminderElement.style.display = "none";
-    }
-  }
-// 更新历史记录显示
-function updateHistoryDisplay(history) {
-  if (!historyList) return;
 
-  if (history.length === 0) {
-    historyList.innerHTML = "<li>暂无提醒历史</li>";
+function updateNextReminderDisplay() {
+  const nextReminderElement = document.getElementById("nextReminder");
+  const nextReminderText = document.getElementById("nextReminderText");
+
+  if (!nextReminderTime) {
+    nextReminderElement.style.display = "none";
     return;
   }
 
-  historyList.innerHTML = history
-    .map(
-      (item) =>
-        `<li>
-            <div class="history-time">${item.time}</div>
-            <div class="history-message">${item.message}</div>
-        </li>`
-    )
-    .join("");
+  const now = Date.now();
+  const timeDiff = nextReminderTime - now;
+  
+  if (timeDiff <= 0) {
+    nextReminderText.textContent = `距离下次提醒：即将提醒`;
+    nextReminderElement.style.display = "flex";
+    return;
+  }
+  
+  const minutesLeft = Math.floor(timeDiff / 60000);
+  const secondsLeft = Math.floor((timeDiff % 60000) / 1000);
+
+  if (minutesLeft > 0) {
+    nextReminderText.textContent = `距离下次提醒：${minutesLeft}分钟`;
+  } else if (secondsLeft > 0) {
+    nextReminderText.textContent = `距离下次提醒：${secondsLeft}秒`;
+  } else {
+    nextReminderText.textContent = `距离下次提醒：即将提醒`;
+  }
+  
+  nextReminderElement.style.display = "flex";
 }
 
 // 获取选中的通知模式

@@ -129,82 +129,6 @@
         margin-bottom: 0;
       }
 
-      .history-section {
-        margin-top: 20px;
-        text-align: left;
-      }
-
-      .history-section h2 {
-        color: #0097a7;
-        border-bottom: 2px solid #0097a7;
-        padding-bottom: 10px;
-        margin-top: 0;
-        font-weight: 600;
-        font-size: 20px;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-      }
-
-      .history-section h2::before {
-        content: "🕒";
-      }
-
-      #historyList {
-        list-style: none;
-        padding: 0;
-        max-height: 250px;
-        overflow-y: auto;
-        margin-top: 10px;
-        border-radius: 10px;
-      }
-
-      #historyList::-webkit-scrollbar {
-        width: 6px;
-      }
-
-      #historyList::-webkit-scrollbar-track {
-        background: #f1f1f1;
-        border-radius: 10px;
-      }
-
-      #historyList::-webkit-scrollbar-thumb {
-        background: #0097a7;
-        border-radius: 10px;
-      }
-
-      #historyList li {
-        padding: 12px;
-        border-bottom: 1px solid #eee;
-        background: white;
-        margin-bottom: 8px;
-        border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-        transition: transform 0.2s;
-      }
-
-      #historyList li:last-child {
-        border-bottom: none;
-        margin-bottom: 0;
-      }
-
-      #historyList li:hover {
-        transform: translateX(5px);
-      }
-
-      .history-time {
-        font-size: 12px;
-        color: #0097a7;
-        font-weight: 600;
-        margin-bottom: 5px;
-      }
-
-      .history-message {
-        font-size: 14px;
-        color: #333;
-        line-height: 1.4;
-      }
-
       .status-indicator {
         display: inline-block;
         width: 14px;
@@ -350,6 +274,58 @@
         border-radius: 50%;
         flex-shrink: 0;
       }
+
+      /* 新增的问号样式 */
+      .help-icon {
+        display: inline-block;
+        width: 16px;
+        height: 16px;
+        background-color: #0097a7;
+        color: white;
+        border-radius: 50%;
+        font-size: 12px;
+        font-weight: bold;
+        text-align: center;
+        line-height: 16px;
+        margin-left: 8px;
+        cursor: help;
+        position: relative;
+      }
+
+      .help-tooltip {
+        visibility: hidden;
+        width: 200px;
+        background-color: #333;
+        color: #fff;
+        text-align: center;
+        border-radius: 6px;
+        padding: 8px;
+        position: absolute;
+        z-index: 1;
+        bottom: 125%;
+        left: 50%;
+        margin-left: -100px;
+        opacity: 0;
+        transition: opacity 0.3s;
+        font-size: 14px;
+        font-weight: normal;
+      }
+
+      .help-tooltip::after {
+        content: "";
+        position: absolute;
+        top: 100%;
+        left: 50%;
+        margin-left: -5px;
+        border-width: 5px;
+        border-style: solid;
+        border-color: #333 transparent transparent transparent;
+      }
+
+      .help-icon:hover .help-tooltip {
+        visibility: visible;
+        opacity: 1;
+      }
     </style>
   </head>
   <body>
@@ -374,8 +350,14 @@
       </div>
 
       <div class="input-group">
-        <label for="interval">提醒间隔（分钟）：</label>
-        <input type="number" id="interval" min="1" max="120" value="30" />
+        <label for="interval">
+          提醒间隔（分钟）：
+          <span class="help-icon">
+            ?
+            <span class="help-tooltip">输入数字设置提醒间隔（分钟），或输入"text:内容"来自定义提醒文本,text:重置提示文本，可以清除设置的文本，点击“开始提醒”按钮生效</span>
+          </span>
+        </label>
+        <input type="text" id="interval" placeholder="例：10 或 text:自定义提醒" min="1" max="120" value="" />
       </div>
 
       <div class="notification-mode">

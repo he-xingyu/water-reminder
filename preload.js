@@ -7,9 +7,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
     stopWaterReminder: () => ipcRenderer.invoke('stop-water-reminder'),
     testReminder: (notificationMode) => ipcRenderer.invoke('test-reminder', notificationMode),
     getReminderStatus: () => ipcRenderer.invoke('get-reminder-status'),
-    getReminderHistory: () => ipcRenderer.invoke('get-reminder-history'),
     getNotificationMode: () => ipcRenderer.invoke('get-notification-mode'),
-    onReminderHistoryUpdated: (callback) => ipcRenderer.on('reminder-history-updated', callback),
     closeReminderPopup: () => ipcRenderer.send('close-reminder-popup'),
-    getCurrentInterval: () => ipcRenderer.invoke('get-current-interval')
+    getCurrentInterval: () => ipcRenderer.invoke('get-current-interval'),
+    setCustomMessage: (message) => ipcRenderer.invoke('set-custom-message', message),
+    getCustomMessage: () => ipcRenderer.invoke('get-custom-message'),
+    onReminderTriggered: (callback) => ipcRenderer.on('reminder-triggered', callback)
 });
