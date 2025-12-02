@@ -21,9 +21,6 @@
       "output": "dist"
     },
     "asar": true,
-    "asarUnpack": [
-      "node_modules/node-notifier/vendor/**/*"
-    ],
     "publish": false,
     "files": [
       "main.js",
@@ -59,10 +56,6 @@
   },
   "devDependencies": {
     "electron": "^39.2.4",
-    "electron-builder": "^26.0.12",
-    "electron-squirrel-startup": "^1.0.0"
-  },
-  "dependencies": {
-    "node-notifier": "^10.0.1"
+    "electron-builder": "^26.0.12"
   }
 }

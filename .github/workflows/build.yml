@@ -13,8 +13,9 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: windows-latest
-            platform: win
+          # 注释掉 Windows 打包配置
+          # - os: windows-latest
+          #   platform: win
           - os: macos-latest  
             platform: mac
 
@@ -47,7 +48,7 @@ jobs:
   create-release:
     needs: build
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/')
+    if: startsWith(github.ref, 'refs/tags')
     
     steps:
     - name: Download all artifacts
@@ -65,7 +66,8 @@ jobs:
       uses: softprops/action-gh-release@v1
       with:
         files: |
-          artifacts/win-build/*.exe
+          # 注释掉 Windows 打包文件
+          # artifacts/win-build/*.exe
           artifacts/mac-build/*.dmg
         generate_release_notes: true
       env:
