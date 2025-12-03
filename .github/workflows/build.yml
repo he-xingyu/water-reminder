@@ -56,8 +56,10 @@ jobs:
 
     - name: Clean up unnecessary macOS files
       run: |
-        find artifacts/mac-build -type f ! -name '*.dmg' -delete
-        find artifacts/mac-build -type d -empty -delete
+        # 只保留 dmg 文件
+        find artifacts/mac-build -maxdepth 1 ! -name '*.dmg' -type f -delete
+        # 删除所有目录（包括 mac-arm64 文件夹）
+        find artifacts/mac-build -mindepth 1 -type d -exec rm -rf {} +
       shell: bash
 
     - name: Create Release

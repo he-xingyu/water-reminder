@@ -28,7 +28,7 @@
       "index.html",
       "reminder-popup.html",
       "package.json",
-      "!build/**/*",
+      "build/**/*",
       "!node_modules/**/*"
     ],
     "extraResources": [
