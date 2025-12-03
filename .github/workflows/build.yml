@@ -54,12 +54,108 @@ jobs:
       with:
         path: artifacts
 
+    - name: Debug - Check file structure
+      run: |
+        echo "=== 调试信息：文件结构 ==="
+        echo "当前工作目录:"
+        pwd
+        
+        echo "artifacts目录完整结构:"
+        find artifacts -type f -o -type d | sort
+        
+        echo "artifacts/mac-build目录内容:"
+        ls -la artifacts/mac-build/ 2>/dev/null || echo "⚠️ mac-build目录不存在"
+        
+        if [ -d "artifacts/mac-build" ]; then
+          echo "mac-build目录大小分析:"
+          du -sh artifacts/mac-build/*
+          echo "mac-arm64文件夹是否存在:"
+          ls -ld artifacts/mac-build/mac-arm64 2>/dev/null && echo "✅ 存在" || echo "❌ 不存在"
+        fi
+      shell: bash
+
     - name: Clean up unnecessary macOS files
       run: |
-        # 只保留 dmg 文件
-        find artifacts/mac-build -maxdepth 1 ! -name '*.dmg' -type f -delete
-        # 删除所有目录（包括 mac-arm64 文件夹）
-        find artifacts/mac-build -mindepth 1 -type d -exec rm -rf {} +
+        echo "=== 开始清理文件 ==="
+        
+        # 确保进入正确的目录
+        cd artifacts/mac-build
+        echo "当前清理目录: $(pwd)"
+        
+        # 方法1：先显示要删除的内容
+        echo "将要删除的非.dmg文件:"
+        find . -maxdepth 1 -type f ! -name '*.dmg' -print
+        
+        echo "将要删除的目录:"
+        find . -mindepth 1 -type d -print
+        
+        # 方法2：强制删除所有非.dmg文件
+        echo "删除非.dmg文件..."
+        find . -maxdepth 1 -type f ! -name '*.dmg' -exec rm -f {} \;
+        
+        # 方法3：使用多种方式确保目录被删除
+        echo "删除所有子目录..."
+        
+        # 尝试1：直接删除mac-arm64（如果存在）
+        if [ -d "mac-arm64" ]; then
+          echo "删除mac-arm64目录..."
+          rm -rf mac-arm64
+        fi
+        
+        # 尝试2：删除所有目录
+        find . -mindepth 1 -type d -exec rm -rf {} + 2>/dev/null || true
+        
+        # 尝试3：使用shell通配符删除
+        rm -rf */ 2>/dev/null || true
+        
+        # 验证清理结果
+        echo "=== 清理后验证 ==="
+        echo "剩余文件:"
+        ls -la
+        
+        echo "目录大小:"
+        du -sh . 2>/dev/null || echo "无法计算大小"
+        
+        echo "文件总数:"
+        find . -type f | wc -l
+      shell: bash
+
+    - name: Verify cleanup results
+      run: |
+        echo "=== 最终验证 ==="
+        cd artifacts/mac-build
+        
+        echo "当前目录内容:"
+        ls -la
+        
+        echo "文件详情:"
+        for file in *; do
+          if [ -f "$file" ]; then
+            size=$(du -h "$file" | cut -f1)
+            echo "  $file ($size)"
+          fi
+        done
+        
+        echo "非.dmg文件检查:"
+        find . -type f ! -name '*.dmg' | while read file; do
+          echo "⚠️ 发现非.dmg文件: $file"
+        done
+        
+        echo "目录检查:"
+        find . -type d ! -name '.' | while read dir; do
+          echo "⚠️ 发现目录: $dir"
+        done
+        
+        # 检查是否只保留.dmg文件
+        file_count=$(find . -maxdepth 1 -type f ! -name '*.dmg' | wc -l)
+        dir_count=$(find . -mindepth 1 -type d | wc -l)
+        
+        if [ "$file_count" -eq 0 ] && [ "$dir_count" -eq 0 ]; then
+          echo "✅ 清理成功：只保留.dmg文件，无多余文件或目录"
+        else
+          echo "❌ 清理不彻底：发现 $file_count 个非.dmg文件，$dir_count 个目录"
+          exit 1
+        fi
       shell: bash
 
     - name: Create Release
