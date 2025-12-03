@@ -1,40 +1,138 @@
-    - name: Build application
-      run: |
-        # 先清空 dist 目录
-        rm -rf dist
-        mkdir -p dist
-        
-        # 执行构建
-        npm run build:mac
-        
-        # 立即清理，只保留 .dmg 文件
-        cd dist
-        echo "构建后的文件:"
-        ls -la
-        
-        # 找到 .dmg 文件
-        dmg_file=$(find . -name "*.dmg" -type f | head -1)
-        
-        if [ -n "$dmg_file" ]; then
-          echo "找到 .dmg 文件: $dmg_file"
+name: Build Water Reminder
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - os: macos-latest
+            platform: mac
+    runs-on: ${{ matrix.os }}
+    name: Build for ${{ matrix.platform }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build application
+        run: |
+          # 先清空 dist 目录
+          rm -rf dist
+          mkdir -p dist
           
-          # 备份 .dmg 文件到临时位置
-          temp_dir=$(mktemp -d)
-          cp "$dmg_file" "$temp_dir/"
+          # 执行构建
+          npm run build:mac
           
-          # 清空 dist 目录
-          rm -rf *
+          # 进入 dist 目录
+          cd dist
           
-          # 把 .dmg 文件移回来
-          mv "$temp_dir"/*.dmg .
+          # 找到 .dmg 文件
+          dmg_file=$(find . -maxdepth 1 -name "*.dmg" -type f | head -1)
           
-          # 清理临时目录
-          rm -rf "$temp_dir"
+          if [ -n "$dmg_file" ]; then
+            echo "找到 .dmg 文件: $dmg_file"
+            
+            # 备份 .dmg 文件到临时位置
+            temp_dir=$(mktemp -d)
+            cp "$dmg_file" "$temp_dir/"
+            
+            # 显示当前目录内容
+            echo "清理前的内容:"
+            ls -la
+            
+            # 清空 dist 目录（删除所有文件和目录）
+            find . -mindepth 1 -delete
+            
+            # 把 .dmg 文件移回来
+            mv "$temp_dir"/*.dmg .
+            
+            # 清理临时目录
+            rm -rf "$temp_dir"
+            
+            echo "清理后的内容:"
+            ls -la
+          else
+            echo "❌ 未找到 .dmg 文件!"
+            echo "当前目录内容:"
+            ls -la
+            exit 1
+          fi
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.platform }}-build
+          path: dist/
+          retention-days: 1
+
+  create-release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags')
+    
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Verify artifacts
+        run: |
+          echo "=== 验证制品文件 ==="
           
-          echo "清理后的文件:"
-          ls -la
-        else
-          echo "❌ 未找到 .dmg 文件!"
-          exit 1
-        fi
-      shell: bash
+          echo "artifacts目录结构:"
+          find artifacts -type f | sort
+          
+          echo "mac-build目录内容:"
+          if [ -d "artifacts/mac-build" ]; then
+            echo "文件列表:"
+            ls -la artifacts/mac-build/
+            
+            echo "文件详情:"
+            for file in artifacts/mac-build/*; do
+              if [ -f "$file" ]; then
+                size=$(du -h "$file" | cut -f1)
+                filename=$(basename "$file")
+                echo "  $filename ($size)"
+              fi
+            done
+            
+            # 检查是否只有 .dmg 文件
+            file_count=$(find artifacts/mac-build -maxdepth 1 -type f | wc -l)
+            non_dmg_count=$(find artifacts/mac-build -maxdepth 1 -type f ! -name '*.dmg' | wc -l)
+            
+            if [ "$file_count" -eq 1 ] && [ "$non_dmg_count" -eq 0 ]; then
+              echo "✅ 验证成功: 只有 1 个 .dmg 文件"
+            else
+              echo "❌ 验证失败: 有 $file_count 个文件，其中 $non_dmg_count 个非 .dmg 文件"
+              exit 1
+            fi
+          else
+            echo "❌ artifacts/mac-build 目录不存在!"
+            exit 1
+          fi
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: artifacts/mac-build/*.dmg
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
