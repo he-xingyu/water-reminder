@@ -15,7 +15,7 @@
   },
   "build": {
     "appId": "com.hexingyu.water",
-    "productName": "Water",
+    "productName": "Tgl",
     "directories": {
       "output": "dist"
     },
@@ -28,13 +28,13 @@
       "index.html",
       "reminder-popup.html",
       "package.json",
-      "build/**/*",
+      "assets/**/*",
       "!node_modules/**/*"
     ],
     "extraResources": [
       {
-        "from": "build/",
-        "to": "resources/build/",
+        "from": "assets/",
+        "to": "assets/",
         "filter": [
           "**/*"
         ]
@@ -46,11 +46,11 @@
       "target": [
         "dmg"
       ],
-      "icon": "build/icon.icns",
+      "icon": "assets/icon.icns",
       "hardenedRuntime": true,
       "gatekeeperAssess": false,
-      "entitlements": "build/entitlements.mac.plist",
-      "entitlementsInherit": "build/entitlements.mac.plist"
+      "entitlements": "assets/entitlements.mac.plist",
+      "entitlementsInherit": "assets/entitlements.mac.plist"
     }
   },
   "devDependencies": {

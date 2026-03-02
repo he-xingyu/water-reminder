@@ -47,15 +47,56 @@ const createWindow = () => {
     }
   });
 };
+// 辅助函数：查找托盘图标路径（打包后必须用真实文件系统路径，不能用 asar 内路径）
+const findTrayIconPath = () => {
+  const iconNames = [
+    process.platform === 'win32' ? 'icon.ico' : 'icon.png',
+    'tray-icon.png',
+    'app-icon.png'
+  ];
 
+  // 打包后 process.resourcesPath 指向 resources 目录，extraResources 的 assets 在此，Tray 需要真实路径不能读 asar
+  const possibleDirs = app.isPackaged
+    ? [
+        path.join(process.resourcesPath, "assets"),
+        path.join(__dirname, "assets"),
+        path.join(__dirname, "resources", "assets"),
+        __dirname,
+      ]
+    : [
+        path.join(__dirname, "assets"),
+        path.join(process.resourcesPath, "assets"),
+        path.join(__dirname, "resources", "assets"),
+        __dirname,
+      ];
+
+  for (const dir of possibleDirs) {
+    for (const iconName of iconNames) {
+      const iconPath = path.join(dir, iconName);
+      if (require("fs").existsSync(iconPath)) {
+        return iconPath;
+      }
+    }
+  }
+
+  return null;
+};
 // 创建系统托盘
 const createTray = () => {
+  const iconPath = findTrayIconPath();
+
   try {
-    const iconPath = path.join(__dirname, "build", "icon.png");
-    tray = new Tray(iconPath);
+    if (iconPath) {
+      tray = new Tray(iconPath);
+      console.log("成功加载托盘图标:", iconPath);
+    } else {
+      // Windows 上 Tray 必须要有图标路径，无参数 new Tray() 会抛错
+      console.warn("未找到托盘图标，跳过创建托盘。请确保 assets/icon.ico（Windows）或 assets/icon.png 存在。");
+      return;
+    }
   } catch (error) {
-    console.log("无法加载图标文件，使用默认托盘图标");
-    tray = new Tray();
+    console.error("创建托盘图标出错:", error);
+    return;
   }
 
   const contextMenu = Menu.buildFromTemplate([
@@ -144,7 +185,7 @@ const closeAllReminderPopups = () => {
 
 // 发送系统通知
 const sendSystemNotification = (message) => {
-  const iconPath = path.join(__dirname, "build", "icon.png");
+  const iconPath = path.join(__dirname, "assets", "icon.png");
 
   if (Notification.isSupported()) {
     const electronNotification = new Notification({
@@ -188,26 +229,29 @@ const sendNotificationByMode = (message, mode) => {
 // 设置喝水提醒定时器
 const setWaterReminder = (intervalMinutes, notificationMode) => {
   currentReminderInterval = intervalMinutes;
-  currentNotificationMode = notificationMode || 'custom';
-  
+  currentNotificationMode = notificationMode || "custom";
+
   if (waterReminderTimer) {
     clearInterval(waterReminderTimer);
   }
-  
+
   const intervalMs = intervalMinutes * 60 * 1000;
   waterReminderTimer = setInterval(() => {
     if (mainWindow) {
-      const messageToSend = customMessage || messages[Math.floor(Math.random() * messages.length)];
+      const messageToSend =
+        customMessage || messages[Math.floor(Math.random() * messages.length)];
       sendNotificationByMode(messageToSend, currentNotificationMode);
-      
+
       if (mainWindow) {
-        mainWindow.webContents.send('reminder-triggered', intervalMs);
+        mainWindow.webContents.send("reminder-triggered", intervalMs);
       }
     }
   }, intervalMs);
-  
+
   isReminding = true;
-  return `已设置每${intervalMinutes}分钟提醒一次喝水（${notificationMode === 'system' ? '系统弹窗' : '自定义弹窗'}）`;
+  return `已设置每${intervalMinutes}分钟提醒一次喝水（${
+    notificationMode === "system" ? "系统弹窗" : "自定义弹窗"
+  }）`;
 };
 
 // 添加设置自定义文本的函数
@@ -292,7 +336,7 @@ app.whenReady().then(() => {
   ipcMain.handle("set-custom-message", (event, message) => {
     return setCustomMessage(message);
   });
-  
+
   const getCustomMessage = () => {
     return customMessage;
   };
